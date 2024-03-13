@@ -181,10 +181,192 @@ var_dump(isset($array['a'])); //returns bool(true)
 	- Comparatively, isset tells you if the key exists, and **IF IT IS SET** (aka not NULL)
 ![[Pasted image 20240307203215.png|800]]
 
+## PHP Operators
+**Exponentiation** denoted by `**`, e.g.
+```PHP
+$x = 5;
+$y = 2;
+var_dump($x ** $y); // This returns 25
+```
+- **Division** returns both integers and floats, depending on the values provided. If you provide two integers that divide cleanly (e.g. 10/2) then it will return the integer 5
+- However, if you provide two integers that have a remainder like 10/3, then it will return the float 3.33333 
+	- If you mix integer and floats, then it will return a float (e.g. 10/2.0)
 
+To not get an error when dividing by 0, we can use the `fdiv()` function to return the float(INF) (infinity) if you so desire
 
+**Modulus**: When using modulus, it will cast the two values provided into integers, e.g. (10.5%2.9) will return 0, since its the same as if you did 10%2
+- `fmod()` is the function you want to use where you pass in two arguments to do a floating modulus)
 
+##### String Concatenation Operator `.` or `.=`
+```php
+$x = 'Hello';
+$x = $x . ' World';
 
+//Equivalent as above
+$x .= ' World';
+```
 
+### Comparison Operators
+Spaceship operator (recall C++) `<=>`
+```php
+//<=>
+var_dump($x <=> $y);
+# Returns -1 if x is less than y, 0 if x is equal to y, and +1 if x is larger than y
+```
 
+`??` operator
+```php
+$x = null;
+$y = $x ?? 'Hello'; //If x is null, then y becomes the value after ??, otherwise if x is not null, y is assigned the value of x
+```
 
+## Logical Operators `&& || ! and or xor`
+- `and` and `or` are the same as their counterparts, except in regards to **precedence**
+- Good rule of thumb, just don't use the `and` and `or` word operators. Their precedence is VERY low.
+
+## Array Operators `+ == === != <> !===` 
+(note <> is the same as inequality operator apparently)
+```php
+$x = ['a', 'b', 'c'];
+$y = ['d', 'e', 'f', 'g', 'h'];
+
+$z = $x + $y; // This $z = ['a', 'b', 'c', 'g', 'h']. It is simply a union (adds to the array if there are not things at those indexes
+
+// == (comparison), compares if the arrays have the same (key, value) pairs
+
+// === (strict comparison), checks the data types, and also if the (key,value) pairs are in the same order!
+$x = ['a' => 1, 'b' => 2, 'c' => 3];
+$y = ['a' => 1, 'b' => '2', 'c' => 3]; //Strict comparison (===) returns false here
+
+$x = ['a' => 1, 'b' => 2, 'c' => 3];
+$y = ['a' => 1, 'c' => 3, 'b' => 2]; //Strict comparison (===) returns false here as its not in the same order!
+```
+
+## Precedence
+refer to https://www.php.net/manual/en/language.operators.precedence.php
+- Items at the top of the table have higher precedence then the ones on the bottom. Left side is associativity
+- Associativity is when operators have the same level of precedence, the associativity describes which direction the operators are handled (e.g. left or right)
+
+##### `elseif` vs `else if`
+- Better to use the first version without the space basically for html 
+Sample if/elseif statement in PHP imbedded in HTML for readability
+```html
+<html>
+	<head>
+		
+	</head>
+	<body>
+		<?php $score = 55; ?>
+		
+		<?php if ($score >= 90): ?>  #Notice the : here
+			<strong style = "color: green;">A</strong>
+		<?php elseif ($score >=80): ?> #notice the : again, also if you do else if (with space) you get error
+			<strong>A</strong>
+		<?php elseif ($score >=70): ?> 
+			<strong>B</strong>
+		<?php elseif ($score >=60): ?>
+			<strong>C</strong>
+		<?php elseif ($score >=50): ?>
+			<strong>D</strong>
+		<?php else: ?>
+			<strong>E</strong>
+		<?php endif ?> #important endif here
+	</body>
+</html>
+```
+- Much more readable in this format above
+
+## Loops
+You can do `break 2` which will actually break out of multiple nested loops
+Alternative syntax for php for while loops
+```php
+<?php
+
+while (true):
+...
+endwhile;
+
+```
+`foreach` used to iterate over arrays or objects
+```php
+<?php
+$proglang = ['php', 'java', 'c++', 'go', 'rust'];
+
+foreach($proglang as $key => $language){
+	echo $key . ': ' . $language . '<br />';
+}
+
+# If we want to modify the elements of the original array, use by reference aka &
+foreach($proglang as $key => &$language){
+	$language = 'php';
+}
+print_r($proglang); //All the languages are php now
+```
+- Note! The variable aka `$language` actually remains after the loop
+- Usually just general good practice to do **`unset($language)`** after the loops
+
+Iterating over **associative arrays**
+- use the **`json_encode()`** or **`implode()`**
+  - If using `implode()`, make sure to check if its an array
+```php
+<?php
+$user = [
+	'name' => 'Thomshu',
+	'email' => 'thomson@email.com',
+	'skills' => ['php', 'java', 'python'],
+];
+
+foreach($user as $key => $value){
+	echo $key . ': ' . json_encode($value) . '<br />';
+}
+
+#implode variant
+foreach($user as $key => $value){
+	if (is_array($value)){
+		$value = implode(', ', $value);
+	}
+	
+	echo $key . ': ' . json_encode($value) . '<br />';
+}
+
+#Alternative syntax foreach
+foreach():
+
+endforeach;
+```
+
+### Switch statements
+- Switch statements do loose comparison (does not check datatypes, so `1` and `'1'` will be treated the same if it was say `case 1:`)
+- Switch statements are better than if elseif as the expression in the switch() is checked only once as opposed to the conditional statements
+
+### Match expression (PHP 8)
+`match()` keyword
+```php
+<?php
+$paymentStatus = 1;
+$payStatusDisplay = match($paymentStatus){
+	1 => 'Paid',
+	2 => 'Payment Declined',
+	0 => 'Pending Payment',
+	default => 'Unknown Payment Status',
+};
+
+echo $payStatusDisplay
+```
+- Difference compared to switch statements
+- `match()` expression itself will evaluate to a value, thus we can assign it to a variable
+- Much cleaner syntax, and no fall through that we experience with switch
+- Match does **strict comparison** while switch does loose comparison
+- **Cannot** do multiple lines as opposed to the multiple lines under each `case` seen in switch
+	- Possible way of doing this is to make the result of each match be a function call if you want multi line
+
+### Declare Statements
+**Ticks**
+```php
+#ticks
+register_tick_function('functionName');
+declare(ticks=1); <= ticks after each line
+```
+Strict Types
+`declare(strict_types=1);`
+- Only applied to the file its in and only to the lines under it
