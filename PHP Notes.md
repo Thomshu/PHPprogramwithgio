@@ -370,3 +370,47 @@ declare(ticks=1); <= ticks after each line
 Strict Types
 `declare(strict_types=1);`
 - Only applied to the file its in and only to the lines under it
+
+## Include Files in PHP
+`require`, `require_once`, `include`, `include_once`
+- Include gives a **warning** and require gives an **error** is the main big difference
+- the `..._once` will include or require the file only once, specifically if its already been included/introduced 
+```php
+
+include 'file.php';
+```
+https://www.youtube.com/watch?v=pQLO6l5lp-Y&list=PLr3d3QYzkw2xabQRUpcZ_IBk9W50M9pe-&index=21
+- Last portion of the video is pretty cool and probably able to implement
+
+## Functions
+syntax
+```php
+function foo(): int{
+	return 1;
+}
+```
+
+- Special to PHP
+```php
+function foo(): ?int{
+	return null;
+}
+```
+- The `?int` here means that null type is also acceptable as the return value
+
+Similarly, accepting multiple return types, can be done using `mixed` keyword as well
+```php
+function foo(): int|float|array{
+	return 1;
+	//return 1.5;
+	//return [];
+}
+
+#Alternative 
+function foo(): mixed{
+	return 1;
+	//return 1.5;
+	//return [];
+}
+```
+
