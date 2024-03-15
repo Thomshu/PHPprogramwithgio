@@ -414,3 +414,278 @@ function foo(): mixed{
 }
 ```
 
+##### Function Parameters
+- Similar to expected return data type, we can do Union types for the parameters
+- As well as setting default values for parameters
+  - Note for this, these default values must be put at the end of the parameter list (e.g. can't have no default, default, no default)
+```php
+function foo(int|float $x, int|float $y = 10)}{ //Note here, by equating y to 10, this is the DEFAULT value if no parameter is passed in
+	return $x * $y
+}
+
+echo foo(5.0); //Here it assigns 5 to x, and uses the default value of 10 for y
+```
+- Splat operator (`...` operator)
+```php
+function sum(...$numbers): int|float{
+	$sum = 0;
+	
+	foreach($numbers as $number){
+		$sum += $number;
+	}
+	return $sum;
+}
+
+echo sum(10, 15, 20, 30, 1, 5, 6) . '<br />';
+
+
+#Combination of regular parameters with variadic parameters
+function sum(int|float $x, int|float $y, ...$numbers): int|float{
+	return $x + $y + array_sum($numbers);
+}
+```
+- This splat operator can also be used to unpack an array into separate arguments
+```php
+
+$a = 6.0;
+$b = 7;
+$numbers = [50, 100, 25.90, 9, 8];
+
+echo sum($a, $b, ...$numbers) . '<br />';
+```
+
+### Named Arguments (PHP 8)
+- Basically allows you to pass in arguments out of order, by naming them specifically when calling the function
+```php
+function foo(int $x, int $y): int{
+	if ($x % $y === 0){
+		return $x/$y;
+	}
+	
+	return $x;
+}
+
+#This is the named arguments part
+$x = 6;
+$y = 3;
+echo foo(y: $y, x: $x); //See that we're passing in the parameters in a different order (x is supposed to be first, y supposed to be second)
+```
+- Main point: Makes it **easier** to change and adjust your functions parameters/orders, without searching and changing the rest of the code that uses said function
+- For specific functions (e.g. built in ones like `setcookie()), there are a lot of parameters that have default values
+  - By using named arguments, we can pass in values that are NON default that we want, without typing or passing in the default values for the others
+  - E.g. if the arguments we're passing are the first, second and say last (10th) parameter of the function
+```php
+setcookie(name: 'foo', value: 'bar', httponly: true);
+```
+- You can also do a mix of named arguments and regular arguments, e.g.
+```php
+echo foo($x, y: $x);
+```
+- Associative arrays keys are actually counted as the named arguments
+Example:
+```php
+function foo(int $x, int $y): int{
+	var_dump($x, $y); //Important for us to see what happens
+	if ($x % $y === 0){
+		return $x/$y;
+	}
+	
+	return $x;
+}
+
+$arr = ['y' => 2, 'x' => 1]; //Associative array
+echo foo(...$arr);
+//var_dump would return int(1)int(2) <= aka the x is assigned to $x, while y is assigned to $y despite being out of order. Its because like we mentioned
+// the keys themselves are used as the named arguments when passed
+```
+
+### Variable Scope
+##### Global Variables
+- For variables outside of functions, to access them in functions, aside from the normal ways of passing it in as an argument, we can use the `global` keyword
+- By using the `global` keyword, the function also can access and modify that variable as global gives a reference of that variable
+  - Therefore if we adjust in the function, it will be adjusted as if we adjusted the original variable as well
+```php
+$x = 5;
+
+function foo(){
+	global $x;
+	
+	echo $x;
+}
+
+foo();
+```
+- Global variables are stored, and we can access them using the `$GLOBALS` keyword along with the variable name, e.g.,
+```php
+$x = 5;
+
+function foo(){
+	echo $GLOBALS['x'];
+}
+
+foo();
+```
+
+##### Static Variables
+- Essentially, static variables using the `static` keyword will ONLY be assigned/called once, and on repeat requests, it will not be ran or called again
+- This is good for saving processing time
+
+## Different variations/types of Functions (Variable/Anonymous/Callable/Closure/Arrow)
+
+#### Variable Functions
+```php
+function sum(int|float ...$numbers): int|float{
+	return array_sum($numbers);
+};
+
+#Alternative way to call functions
+$x = 'sum';
+echo $x(1,2,3,4); //This will call the sum function and echo its result
+```
+- In PHP, when it detects **parenthesis** next to a variable, it will look for a function with the same name as whatever the variable evaluates to, which in this case was `sum`
+  - If `sum` function does not exist, it would simply throw an error
+  - To avoid this error, we can use the function `is_callable()`
+```php
+function sum(int|float ...$numbers): int|float{
+	return array_sum($numbers);
+};
+
+$x = 'sum';
+if (is_callable($x)){
+	echo $x(1,2,3,4); //This will call the sum function and echo its result
+}
+else{
+	echo 'Not Callable';
+}
+```
+
+#### Anonymous Functions aka **LAMBDA** functions
+```php
+$sum = function (int|float ...$numbers): int|float{ // No name function aka Lambda as we know it, we can assign it to variable called sum
+	return array_sum($numbers);
+};
+
+echo $sum(1,2,3,4);
+```
+
+##### Accessing variables from parent scope in say anonymous functions via `use` keyword
+- `use` keyword followed by variables trying to access in parenthesis
+```php
+$x = 1; //variable we are trying to access in function
+$sum = function (int|float ...$numbers) use ($x): int|float{ // No name function aka Lambda as we know it, we can assign it to variable called sum
+	echo $x;
+	return array_sum($numbers);
+};
+
+echo $sum(1,2,3,4);
+```
+- As always, we can access those variables by reference by adding ampersand
+```php
+$sum = function (int|float ...$numbers) use (&$x): int|float{ // No name function aka Lambda as we know it, we can assign it to variable called sum
+	$x = 15; //adjusting it since we passed it by reference
+	echo $x;
+	return array_sum($numbers);
+};
+
+echo $sum(1,2,3,4);
+```
+
+#### Callable data type and Callback functions
+- Example, `array_map()` first argument it accepts is a so called **callback** function of data type callable
+- One way to pass this in is via an anonymous function
+```php
+$array = [1,2,3,4];
+
+$array2 = array_map(function($element){
+	return $element * 2;
+}, $array);
+
+echo '<pre>';
+print_r($array);
+
+print_r($array2);
+echo '</pre>';
+
+//$array2 = array_map('foo', $array); third way
+```
+- Second way is to assign anonymous function to variable then pass it in
+- And third way is obviously having a function defined properly as a name and pass it in as a string
+
+Example used in video
+```php
+$sum = function (callable $callback, int|float ...$numbers) use ($x): int|float{ 
+	return $callback(array_sum($numbers)); //This callback is calling the function we passed into it below in the echo statement
+};
+
+function foo($element){
+	return $element * 2;
+}
+
+echo $sum('foo', 1,2,3,4);
+
+//Passing as anonymous function
+echo $sum(function($element){
+	return $element * 2;
+}, 1,2,3,4);
+```
+- "**closure**" vs "**callable**" functions
+  - Closure function MUST be a lambda function while callable functions can be both lambda and named functions
+  - Basically where callable is used in the above example, the keyword `closure` could have been used instead if we were using anonymous functions
+
+##### Arrow Functions
+- Cleaner syntax of anonymous functions, good for inline callback functions, using 
+`fn(parameter defition) => expression`
+```php
+#As before, we did
+$array = [1,2,3,4];
+$array2 = array_map(function($element){
+	return $element * $element;
+}, $array);
+
+echo '<pre>';
+print_r($array2); //Would get 1,4,9,16
+echo '</pre>';
+
+#Replacing it with an ARROW function for cleaner syntax
+$array2 = array_map(fn($element) => $element * $element, $array);
+```
+- Differences, can always access variables from parent scope WITHOUT the need to use the `use` keyword like we did before for functions
+- Arrow functions can only have a single expression and it returns the value of that expression
+  - Cannot have multi-line expressions
+
+## Date & Time
+https://www.php.net/manual/en/datetime.format.php
+https://www.php.net/manual/en/timezones.php
+https://www.php.net/manual/en/datetime.formats.php#datetime.formats.relative
+`time()` function
+`echo time()` //Prints large integer of Unix timestamp. It's the timestamp from 1970 jan 1st
+
+```php
+$currentTime = time();
+$5daysTime = $currentTime + 5*24*60*60;
+$YesterdayTime = $currentTime - 60*60*24;
+```
+
+#### **Date**
+```php
+echo date('m/d/Y g:ia') . '<br />'; #refer to datetime.format.php //e.g. 03/15/2024 11:00pm
+// g is 12-hour format without leading zeros
+// i gives minutes without leading zeros
+//a gives Lowercase am or pm
+```
+
+#### Timezone
+`date_default_timezone_set('UTC')` //Pass in valid timezone using the timezones.php doc
+
+**Converting** String dates to unix timestamp (parsing dates)
+Use `strtotime()` function
+`strtotime('2021-01-18 07:00:00');`
+- `strtotime()` also works with common/relevant keywords
+- E.g. `strtotime('tomorrow');` or `strtotime('first day of february)`
+
+`date_parse`
+- Pass in a date and you will return an array containing the dates information
+  - E.g. year, month, day, hour, minute, second, fraction, etc.
+
+`date_pase_from_format()` parses a date from a specific format that you have to pass in
+`print_r(date_parse_from_format('m/d/Y g:ia', $date));`
