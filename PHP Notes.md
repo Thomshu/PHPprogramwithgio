@@ -689,3 +689,150 @@ Use `strtotime()` function
 
 `date_pase_from_format()` parses a date from a specific format that you have to pass in
 `print_r(date_parse_from_format('m/d/Y g:ia', $date));`
+
+### Array Functions
+https://www.php.net/manual/en/ref.array.php
+`array_chunk(array $array, int $length, bool $preserveKeys = False): array`
+- First two arguments are important, third one is optional if you want to preserve the keys or not
+- Simply breaks the array down into smaller chunks
+
+`array_combine(array $keys, array $values): array`
+- Combines two arrays, using the first array's values as the new array's keys, and the second arrays values as the new array's values
+- Error occurs if number of elements do not match in the two arrays
+
+`array_filter(array $array, callable|null $callback = null, int $mode=0): array`
+- Last argument is to specify what the callback function uses (e.g. the key or values of the array)
+- if we use `array_filter($array)` with no additional arguments, the array_filter function will simply just clean the array from all false/null values, e.g. `false, [], 0.0, etc.)
+
+`array_keys(array $keys, mixed $search_value, bool $strict = false): array`
+`$keys = array_keys($array);` <= Returns the keys as values of the new array
+
+`array_map(callable|null $callback, array $array, array ...$arrays): array`
+- Example is wanting to multiply an array by 3
+`$newarray = array_map(fn($number) => $number * 3, $array);`
+- `$newarray = array_map(fn($number1, $number2) => $number1 * $number2, $array1, $array2);`
+
+`array_merge(array ...$arrays): array`
+- Merges arrays by appending them to the end of each array
+- **Numeric** keys will be reindexed starting from 0
+- However, if you have repeat **string** keys, then the values will be overwritten by repeat keys and their corresponding values
+
+`array_reduce(array $array, callable $callback, mixed $initialValue = null): mixed`
+```php
+$invoiceItems = [
+    ['price' => 99.9, 'qty' => 3, 'desc' => 'Item 1'],
+    ['price' => 29.99, 'qty' => 1, 'desc' => 'Item 2'],
+    ['price' => 149, 'qty' => 1, 'desc' => 'Item 3'],
+    ['price' => 14.99, 'qty' => 2, 'desc' => 'Item 4'],
+    ['price' => 4.99, 'qty' => 4, 'desc' => 'Item 5'],
+];
+
+$total = array_reduce(
+    $invoiceItems,
+    fn($sum, $item) => $item['qty'] * $item['price']
+    #, 500 <= this additional parameter after the one before is the **initial value**, so it would start off at 500 here + the total 258.9 seen below
+);
+
+echo $total; # This would print 258.9
+```
+
+`array_search(mixed $needle, array $haystack, bool $strict = false); int|string|false`
+```php
+$array = ['a', 'b', 'c', 'D', 'E', 'ab', 'bc', 'cd', 'b', 'd'];
+
+$key = array_search('b', $array); // Last comparison is if you want to do loose or strict comparison
+// This would return int(1)
+// Only returns the key of the first matching value
+```
+
+#### Finding difference between arrays
+`array_diff($array1, $array2, $array3);`
+- Returns the **values** of the first array not present in the other arrays
+- `array_diff_key()` does the same but for keys instead
+
+If we also want to check for the keys we use:
+`array_diff_assoc($array1, $array2, $array3);`
+- Displays all the (key,value) pairs that DON'T appear in the other arrays
+
+#### Sorting Arrays
+**`asort()`**
+- Sorts arrays by their values
+
+**`ksort()`**
+- Sorts arrays by their keys
+
+`usort()`, takes a callback as its second argument
+```php
+usort($array, fn($a, $b) => $a <=> $b);
+```
+- Sort will remove custom keys and use numeric keys instead
+
+#### Array Destructuring
+```php
+$array = [1,2,3,4];
+
+[$a, $b, $c, $d] = $array; #Alternative syntax is list($a, $b, $c, $d)
+
+echo $a . ', ' . $b . ', ' . $c . ', ' . $d . '<br />';
+
+# Can also destructure only some of them if you want
+[$a, , $c, ] = $array; 
+
+echo $a . ', ' . $c . '<br />';
+
+#Can also do this out of order if you want
+# Can also destructure only some of them if you want
+$array = [1,2,3];
+[1 => $a, 0 => $b, 2 => $c ] = $array; 
+
+echo $a . ', ' . $b . ', ' . $c . '<br />';
+```
+
+## PHP Configuration File
+**PHP.INI**
+- For XAMPP, can be found via the Apache => Config => php.ini
+- Text enclosed in `[]` is ignored
+- Text with ; (semicolon) are comments
+
+Possibly important settings
+- `error_reporting`
+- `error_log` combined with `display_errors`
+
+### Error Handling and Error Handlers
+#### Error Handler
+- Creating our own function
+```php
+//Error Handling
+function errorHandler(int $type, string $msg, ?string $file = null, ?int $line = null) //First argument is error type, second is error message
+{
+    #Bad line of code, simply for demonstration purposes
+    echo $type . ': ' . $msg . ' in ' . $file . ' on line ' . $line;
+    exit;
+}
+
+#Registering it at the errorHandler
+set_error_handler('errorHandler', E_ALL); //Custom errorhandler first argument, error level as second argument
+```
+
+Skipped 1.29: Basic Apache Webserver Config/Virtual Hosts
+
+## Working with Filesystem in PHP
+```php
+
+$dir =  scandir(__DIR__); 
+var_dump($dir); //Run this in index.php and you'll see the results. Leads to current directory. It returns an array that you could loop through and use
+#$dir[2] would return the current file in the directory aka index.php
+
+#Creating new directory
+mkdir('foo');
+
+#Deleting directory
+rmdir('foo'); //Deleting directory has to be an empty directory otherwise warning
+
+#Making directory recursively (this makes both foo and bar
+mkdir('foo/bar', recursive: true);
+
+rmdir('foo/bar')
+```
+
+**`file_exists('foo.txt')`** function
