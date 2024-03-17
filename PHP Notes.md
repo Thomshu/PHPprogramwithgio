@@ -818,7 +818,6 @@ Skipped 1.29: Basic Apache Webserver Config/Virtual Hosts
 
 ## Working with Filesystem in PHP
 ```php
-
 $dir =  scandir(__DIR__); 
 var_dump($dir); //Run this in index.php and you'll see the results. Leads to current directory. It returns an array that you could loop through and use
 #$dir[2] would return the current file in the directory aka index.php
@@ -829,10 +828,115 @@ mkdir('foo');
 #Deleting directory
 rmdir('foo'); //Deleting directory has to be an empty directory otherwise warning
 
-#Making directory recursively (this makes both foo and bar
+#Making directory recursively (this makes both foo and bar)
 mkdir('foo/bar', recursive: true);
 
-rmdir('foo/bar')
+rmdir('foo/bar'); //This simply deletes ONLY the bar directory
+rmdir('foo'); //This would delete the 'foo' folder afterwords
 ```
 
+#### Checking if File/Directory Exists
 **`file_exists('foo.txt')`** function
+- Below will also include the `filesize()` function to return the filesize of that file
+```php
+if (file_exists('foo.txt')){
+    echo filesize('foo.txt');
+} else{
+    echo 'File no found';
+}
+```
+- Note, some functions like `filesize()` have cached values, and if you were to call them again, say after making an edit to the file you called it for previously, you'll want to use `clearstatcache()` first
+```php
+if (file_exists('foo.txt')){
+    echo filesize('foo.txt');
+    
+    file_put_contents('foo.txt', 'hello world');
+    
+    clearstatcache();
+    echo filesize('foo.txt');
+} else{
+    echo 'File no found';
+}
+```
+
+### Opening and Reading a file Line by Line
+https://www.php.net/manual/en/function.fopen.php
+`fopen()`
+- Returns a **"resource"** (discussed later)
+- fopen() returns false and a warning if the file is not found. Since it is only a warning, some developers surpress such warnings and thus use the `@` sign in front of fopen
+```php
+<?php
+
+//Opening a file along with error handlers for cases where no file exists
+if (! file_exists('foo.txt')){
+    echo 'File not found';
+    return;
+}
+
+$file = fopen('foo.txt', 'r'); # 2nd argument are the modes you want to open it for
+
+//Reading Line by Line
+while (($line = fgets($file)) !=== false){ //strict not comparison. Because the line itself could be a value that eventually evalutes to false which can lead to bugs
+    echo $line . '<br />';
+}
+
+//Make sure to close the file!
+fclose($file);
+```
+Function to write into a file => `fwrite()`
+- Read from csv file => `fgetcsv()`
+    - Similar to `fget()`, parses the line and returns an **array** containing the fields it has read. Default delimiter for the fields is the `,` (comma), but can be changed based on the arguments you pass
+```php
+<?php
+
+//Opening a file along with error handlers for cases where no file exists
+if (! file_exists('foo.txt')){
+    echo 'File not found';
+    return;
+}
+
+$file = fopen('foo.txt', 'r'); # 2nd argument are the modes you want to open it for
+
+//Reading Line by Line
+while (($line = fgetcsv($file)) !=== false){ //strict not comparison. Because the line itself could be a value that eventually evalutes to false which can lead to bugs
+    print_r($line);
+}
+
+//Make sure to close the file!
+fclose($file);
+```
+
+##### Alternative way to read file content `file_get_contents`
+```php
+<?php
+$content = file_get_contents('foo.txt', offset:3, length 2); 
+
+echo $content; //returns 'lo' of the 'hello world' because of offset and length of 2
+```
+
+##### Writing content to file using `file_put_contents()`
+```php
+<?php
+
+file_put_contents('bar.txt', 'hello');
+
+file_put_contents('bar.txt', 'world', FILE_APPEND); //Appends to an existing file instead of overwriting!
+```
+- Does the same thing as `fopen()`, `fwrite()` and `fclose()` combined
+  - If the file does not exist, it will create it, otherwise it will overwrite
+  - We can have content **appended** instead of overwriting it using Flags as the 3rd argument
+
+####  Delete, copy, rename and move files
+`unlink(), copy(), rename()`
+```php
+<?php
+
+unlink('bar.txt'); //removes the file
+
+copy('foo.txt', 'bar.txt');
+
+rename('foo.txt', 'newfilename.txt');
+```
+
+##### Getting Information about a file: `pathinfo()`
+- Returns filename, extension, basename, etc.
