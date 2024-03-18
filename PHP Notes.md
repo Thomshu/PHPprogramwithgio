@@ -898,7 +898,7 @@ if (! file_exists('foo.txt')){
 $file = fopen('foo.txt', 'r'); # 2nd argument are the modes you want to open it for
 
 //Reading Line by Line
-while (($line = fgetcsv($file)) !=== false){ //strict not comparison. Because the line itself could be a value that eventually evalutes to false which can lead to bugs
+while (($line = fgetcsv($file)) !== false){ //strict not comparison. Because the line itself could be a value that eventually evalutes to false which can lead to bugs
     print_r($line);
 }
 
